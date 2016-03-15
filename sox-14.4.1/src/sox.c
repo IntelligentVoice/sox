@@ -1515,6 +1515,17 @@ static char *fndup_with_count(const char *filename, size_t count)
     return expand_fn;
 }
 
+static char *fndup_with_position(const char *filename, double position)
+{
+  char *efn;
+
+  efn = lsx_malloc((size_t)FILENAME_MAX);
+
+  sprintf(efn, "%s.%f.wav", filename, position);
+
+  return efn;
+}
+
 static void open_output_file(void)
 {
   double factor;
@@ -1549,8 +1560,10 @@ static void open_output_file(void)
     oob.loops[i].length = oob.loops[i].length * factor;
   }
 
-  if (output_method == sox_multiple)
-    expand_fn = fndup_with_count(ofile->filename, ++output_count);
+  if (output_method == sox_multiple) {
+    double read_time = (double)read_wide_samples / combiner_signal.rate;
+    expand_fn = fndup_with_position(ofile->filename, read_time);
+  }
   else
     expand_fn = lsx_strdup(ofile->filename);
   ofile->ft = sox_open_write(expand_fn, &ofile->signal, &ofile->encoding,
